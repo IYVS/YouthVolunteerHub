@@ -3444,6 +3444,9 @@
   "/gihyo/list/group/:id": [
     "masakichi"
   ],
+  "/girlguiding/blog": [
+    "iyvs"
+  ],
   "/gisreportsonline/:path{.*}": [
     "dzx-dzx"
   ],
