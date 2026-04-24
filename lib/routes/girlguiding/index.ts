@@ -1,13 +1,15 @@
+import type { Element } from 'domhandler';
 import type { Route } from '@/types';
 import { load } from 'cheerio';
-import { ofetch } from 'ofetch';
+import { getPuppeteerPage } from '@/utils/puppeteer';
 
 export const route: Route = {
     path: '/blog',
     name: 'Blog',
-    url: 'girlguiding.org.uk',
+    url: 'girlguiding.org.uk',2
     maintainers: ['iyvs'],
     handler,
+    example: '/girlguiding/blog',
     description: 'Latest blog posts and news from Girlguiding UK.',
 };
 
@@ -15,45 +17,28 @@ async function handler() {
     const baseUrl = 'https://www.girlguiding.org.uk';
     const blogUrl = `${baseUrl}/what-we-do/blog/`;
 
-    let html: string;
-
-    try {
-        html = await ofetch(blogUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                'Accept-Language': 'en-GB,en;q=0.9',
-                'Accept-Encoding': 'gzip, deflate, br',
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache',
-                'Sec-Fetch-Dest': 'document',
-                'Sec-Fetch-Mode': 'navigate',
-                'Sec-Fetch-Site': 'none',
-                'Sec-Fetch-User': '?1',
-                'Upgrade-Insecure-Requests': '1',
-            },
-        });
-    } catch {
-        // If ofetch fails, fall back to debug response so we can diagnose
-        return {
-            title: 'Girlguiding UK — Blog (fetch failed)',
-            link: blogUrl,
-            description: 'Failed to fetch page — may need Puppeteer',
-            item: [],
-        };
-    }
+    const { page, destroy } = await getPuppeteerPage(blogUrl, { gotoConfig: { waitUntil: 'networkidle2' } });
+    const html = await page.content();
+    await destroy();
 
     const $ = load(html);
 
-    // TEMPORARY DEBUG — remove before production
+    const items = $('div.teaser-block--ltr').map((_i, el) => {
+        const a = $(el).find('a.teaser-block__link');
+        const title = $(el).find('span.teaser-block__title-text').text().trim();
+        const href = a.attr('href') ?? '';
+        const link = href.startsWith('http') ? href : `${baseUrl}${href}`;
+        const linkTexts = $(el).find('p.teaser-block__linktext');
+        const date = linkTexts.eq(0).text().trim();
+        const description = linkTexts.eq(1).text().trim();
+
+        return { title, link, description, pubDate: date };
+    }).get();
+
     return {
-        title: 'DEBUG — Girlguiding',
+        title: 'Girlguiding Blog',
         link: blogUrl,
-        description: 'debug',
-        item: [{
-            title: 'HTML dump',
-            link: blogUrl,
-            description: $.html().substring(0, 5000),
-        }],
+        description: 'Latest blog posts and news from Girlguiding UK.',
+        item: items,
     };
 }
