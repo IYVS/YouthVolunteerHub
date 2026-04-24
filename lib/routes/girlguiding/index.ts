@@ -6,7 +6,7 @@ import { getPuppeteerPage } from '@/utils/puppeteer';
 export const route: Route = {
     path: '/blog',
     name: 'Blog',
-    url: 'girlguiding.org.uk',2
+    url: 'girlguiding.org.uk',
     maintainers: ['iyvs'],
     handler,
     example: '/girlguiding/blog',
