@@ -23,22 +23,14 @@ async function handler() {
 
     const $ = load(html);
 
-    const items = $('div.teaser-block--ltr').map((_i, el) => {
-        const a = $(el).find('a.teaser-block__link');
-        const title = $(el).find('span.teaser-block__title-text').text().trim();
-        const href = a.attr('href') ?? '';
-        const link = href.startsWith('http') ? href : `${baseUrl}${href}`;
-        const linkTexts = $(el).find('p.teaser-block__linktext');
-        const date = linkTexts.eq(0).text().trim();
-        const description = linkTexts.eq(1).text().trim();
-
-        return { title, link, description, pubDate: date };
-    }).get();
-
     return {
-        title: 'Girlguiding Blog',
+        title: 'DEBUG',
         link: blogUrl,
-        description: 'Latest blog posts and news from Girlguiding UK.',
-        item: items,
+        description: 'debug',
+        item: [{
+            title: 'HTML dump',
+            link: blogUrl,
+            description: $.html().substring(0, 5000),
+        }],
     };
 }
