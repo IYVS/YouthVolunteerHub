@@ -1,6 +1,6 @@
 import type { Route } from '@/types';
 import { load } from 'cheerio';
-import { ofetch } from 'ofetch';
+import puppeteer from '@/utils/puppeteer';
 
 export const route: Route = {
     path: '/news',
@@ -15,21 +15,12 @@ async function handler() {
     const baseUrl = 'https://www.scouts.org.uk';
     const newsUrl = `${baseUrl}/news/`;
 
-const html = await ofetch(newsUrl, {
-    headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'en-GB,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1',
-        'Upgrade-Insecure-Requests': '1',
-    },
-});
+    const browser = await puppeteer();
+    const page = await browser.newPage();
+
+    await page.goto(newsUrl, { waitUntil: 'networkidle2' });
+    const html = await page.content();
+    await browser.close();
 
     const $ = load(html);
     const items: object[] = [];
